@@ -23,6 +23,7 @@ return new class extends Migration {
             $table->decimal('bathrooms', 4, 1);
             $table->string('comments', 128)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

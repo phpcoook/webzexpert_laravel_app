@@ -3,51 +3,78 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\RealEstateProperty;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RealEstatePropertyResource;
+use App\Http\Resources\RealEstatePropertyListResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class RealEstatePropertyController extends Controller
 {
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
-        return RealEstatePropertyResource::collection(
+        return RealEstatePropertyListResource::collection(
             RealEstateProperty::all()
         );
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RealEstatePropertyResource|JsonResponse
     {
-        $data = $this->validateData($request);
-
-        $property = RealEstateProperty::create($data);
-
-        return new RealEstatePropertyResource($property);
+        try{
+            $data = $this->validateData($request);
+            $property = RealEstateProperty::create($data);
+            return new RealEstatePropertyResource($property);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function show(RealEstateProperty $realEstate)
+    public function show(RealEstateProperty $realEstate): RealEstatePropertyResource
     {
         return new RealEstatePropertyResource($realEstate);
     }
 
-    public function update(Request $request, RealEstateProperty $realEstate)
+    public function update(Request $request, RealEstateProperty $realEstate): RealEstatePropertyResource|JsonResponse
     {
-        $data = $this->validateData($request, $realEstate->id);
-
-        $realEstate->update($data);
-
-        return new RealEstatePropertyResource($realEstate);
+        try {
+            $data = $this->validateData($request, $realEstate->id);
+            $realEstate->update($data);
+            return new RealEstatePropertyResource($realEstate->fresh());
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
-    public function destroy(RealEstateProperty $realEstate)
+    public function destroy(RealEstateProperty $realEstate): RealEstatePropertyResource
     {
+        $deleted = $realEstate->replicate(); // clone before delete
         $realEstate->delete();
 
-        return response()->json(['message' => 'Deleted successfully']);
+        return new RealEstatePropertyResource($deleted);
     }
 
-    private function validateData(Request $request, $id = null)
+    private function validateData(Request $request, $id = null): array
     {
         return $request->validate([
             'name' => 'required|string|min:1|max:128',
