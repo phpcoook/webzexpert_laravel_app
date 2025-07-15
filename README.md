@@ -15,7 +15,9 @@ cd webzexpert_laravel_app
 
 ### 2. Start Docker Containers
 
+```bash
 docker-compose up -d
+```
 
 ### 3. Set up environment
 
@@ -23,7 +25,7 @@ docker-compose up -d
 cp .env.example .env
 ```
 
-### 3. Install Dependencies
+### 3. Install Dependencies, Database migration and Serve
 
 ```bash
 docker exec -it laravel_app bash
