@@ -70,3 +70,9 @@ Visit: http://localhost:8000
 }
 
 ```
+
+### 7. Run Tests
+
+```bash
+php artisan test
+```
